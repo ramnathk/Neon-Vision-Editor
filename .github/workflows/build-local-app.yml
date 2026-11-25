@@ -1,0 +1,48 @@
+# On-demand unsigned macOS build for local testing, for contributors whose
+# local Xcode can't open this project's file format yet.
+
+name: Build local app
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        env:
+          NVE_ALLOW_BETA_XCODE: 1
+        run: source scripts/ci/select_xcode17.sh
+
+      - name: Build macOS app (unsigned)
+        env:
+          DERIVED_DATA_ROOT: ${{ github.workspace }}/.DerivedDataLocal
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project "Neon Vision Editor.xcodeproj" \
+            -scheme "Neon Vision Editor" \
+            -destination "platform=macOS" \
+            -derivedDataPath "$DERIVED_DATA_ROOT" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Zip app
+        run: |
+          set -euo pipefail
+          cd ".DerivedDataLocal/Build/Products/Debug"
+          zip -r -y "$GITHUB_WORKSPACE/Neon-Vision-Editor.zip" "Neon Vision Editor.app"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: Neon-Vision-Editor-macOS
+          path: Neon-Vision-Editor.zip
+          retention-days: 14
