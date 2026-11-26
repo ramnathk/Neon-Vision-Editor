@@ -33,6 +33,8 @@ jobs:
             -derivedDataPath "$DERIVED_DATA_ROOT" \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
             build
 
       - name: Zip app
